@@ -1,0 +1,34 @@
+{
+  "name": "college_platform",
+  "version": "1.0.0",
+  "description": "Plataforma sin fines de lucro y con propositos de ayuda al estudiante en curso o graduado de la facultad de sistemas de la Universidad de Huánuco (UDH)",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "prepare": "husky install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jamesnoria/college_platform.git"
+  },
+  "author": "James Noria",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jamesnoria/college_platform/issues"
+  },
+  "homepage": "https://github.com/jamesnoria/college_platform#readme",
+  "devDependencies": {
+    "@commitlint/cli": "^17.4.1",
+    "@commitlint/config-conventional": "^17.4.0",
+    "@typescript-eslint/eslint-plugin": "^5.48.1",
+    "@typescript-eslint/parser": "^5.48.1",
+    "eslint": "^8.31.0",
+    "eslint-plugin-vue": "^9.8.0",
+    "husky": "^8.0.3",
+    "prettier": "^2.8.2"
+  }
+}

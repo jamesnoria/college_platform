@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "=== ESLINT === "
+npm run format
+echo "=== PRETTIER === "
+npm run lint
