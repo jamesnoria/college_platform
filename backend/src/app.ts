@@ -1,4 +1,7 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
+
+import errorHandler, { AppError } from './utils/appError';
+
 import morgan from 'morgan';
 import userRoute from './routes/userRoutes';
 
@@ -8,12 +11,19 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/', (req, res) => {
+app.use('/api/v1/users', userRoute);
+
+app.get('/', (req: Request, res: Response) => {
   res.json({
-    message: 'It works! 😺',
+    status: 'success',
+    message: 'Hello World 👋',
   });
 });
 
-app.use('/api/v1/users', userRoute);
+app.all('*', (req, res, next) => {
+  throw new AppError(404, `${req.originalUrl} no es un endpoint válido`);
+});
+
+app.use(errorHandler);
 
 export default app;

@@ -1,7 +1,8 @@
-import { RequestHandler } from 'express';
+import { Request, Response } from 'express';
 import User from '../models/userModel';
+import CatchAsync from '../utils/catchAsync';
 
-export const signup: RequestHandler = async (req, res) => {
+export const signup = CatchAsync(async (req: Request, res: Response) => {
   const { name, lastName, email } = req.body;
 
   const newUser = await User.create({
@@ -16,4 +17,4 @@ export const signup: RequestHandler = async (req, res) => {
       user: newUser,
     },
   });
-};
+});
