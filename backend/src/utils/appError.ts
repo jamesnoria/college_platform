@@ -13,6 +13,8 @@ export class AppError extends Error {
   }
 }
 
+// TODO: Correct this error handler
+
 const errorHandler: ErrorRequestHandler = (error: any | AppError, req: Request, res: Response, next: NextFunction) => {
   const code = error.code || 500;
   const message = error.message;
@@ -35,6 +37,7 @@ const errorHandler: ErrorRequestHandler = (error: any | AppError, req: Request, 
     message,
     success: false,
     data: null,
+    stack: ENVIRONMENT === 'production' ? '' : error.stack,
   });
 };
 

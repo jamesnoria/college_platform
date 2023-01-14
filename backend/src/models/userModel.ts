@@ -1,7 +1,9 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model, ObjectId } from 'mongoose';
 import validator from 'validator';
+import bcrypt from 'bcrypt';
 
-interface IUser {
+export interface IUser {
+  _id: ObjectId;
   name: string;
   lastName: string;
   email: string;
@@ -10,10 +12,11 @@ interface IUser {
   photo?: string;
   role: string;
   password: string;
-  passwordConfirm: string;
+  passwordConfirm: string | undefined;
   passwordChangedAt: Date;
   passwordResetToken: String;
   passwordResetExpires: Date;
+  isModified: (path: string) => boolean;
 }
 
 const userSchema = new Schema<IUser>({
@@ -48,23 +51,31 @@ const userSchema = new Schema<IUser>({
   },
   password: {
     type: String,
-    // required: [true, 'Contraseña es requerida'],
+    required: [true, 'Contraseña es requerida'],
     minlength: 8,
     select: false,
   },
   passwordConfirm: {
     type: String,
-    // required: [true, 'Confirmación de contraseña es requerida'],
-    // validate: {
-    //   validator: function (el) {
-    //     return el === this.password;
-    //   },
-    //   message: 'Las contraseñas no coinciden',
-    // },
+    required: [true, 'Confirmación de contraseña es requerida'],
+    validate: {
+      validator: function (el: string) {
+        // @ts-ignore
+        return el === this.password;
+      },
+      message: 'Las contraseñas no coinciden',
+    },
   },
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+});
+
+userSchema.pre<IUser>('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 12);
+  this.passwordConfirm = undefined;
+  next();
 });
 
 const User = model<IUser>('User', userSchema);
