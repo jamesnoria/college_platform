@@ -5,6 +5,10 @@ import { AppError } from '../utils/appError';
 import CatchAsync from '../utils/catchAsync';
 import { ObjectId } from 'mongoose';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import AWS from 'aws-sdk';
+import { ref, uploadBytes } from 'firebase/storage';
+import { storage } from '../utils/firebase';
 
 interface IGetUserAuthInfoRequest extends Request {
   user: IUser;
@@ -19,10 +23,14 @@ const signToken = (id: ObjectId | undefined) => {
 export const signup = CatchAsync(async (req: Request, res: Response) => {
   const { name, lastName, email, password, passwordConfirm } = req.body;
 
+  const imgRef = ref(storage, `users/${req.file!.originalname}`);
+  const snapshot = await uploadBytes(imgRef, req.file!.buffer);
+
   const newUser = await User.create({
     name,
     lastName,
     email,
+    photo: snapshot.metadata.fullPath,
     password,
     passwordConfirm,
   });
@@ -60,6 +68,88 @@ export const login = CatchAsync(async (req: Request, res: Response, next: NextFu
   });
 });
 
+export const forgotPassword = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return next(new AppError(404, 'No se encontró ningun usuario con ese email'));
+  }
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+
+  const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
+
+  const message = `Por favor haga click en este enlace para restablecer su contraseña: \n\n ${resetURL}`;
+
+  try {
+    AWS.config.update({
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      region: 'us-east-1',
+    });
+
+    const params = {
+      Destination: {
+        ToAddresses: [user.email],
+      },
+      Message: {
+        Body: {
+          Html: {
+            Charset: 'UTF-8',
+            Data: message,
+          },
+        },
+        Subject: {
+          Charset: 'UTF-8',
+          Data: 'Su token de restablecimiento de contraseña (válido por 10 minutos)',
+        },
+      },
+      Source: process.env.EMAIL_FROM as string,
+    };
+
+    const sendPromise = new AWS.SES({ apiVersion: '2010-12-01' }).sendEmail(params).promise();
+    sendPromise.then(function (data) {
+      res.status(200).json({
+        status: 'success',
+        aws: data,
+        message: 'Email de restablecimiento de contraseña enviado',
+      });
+    });
+  } catch (err) {
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    return next(new AppError(500, 'Error al enviar el email de restablecimiento de contraseña'));
+  }
+});
+
+export const resetPassword = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new AppError(400, 'Token invalido o expirado'));
+  }
+
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+
+  await user.save();
+
+  const token = signToken(user._id);
+
+  res.status(200).json({
+    status: 'success',
+    token,
+  });
+});
+
 export const protect = CatchAsync(async (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
   let token: string | undefined;
 
@@ -79,9 +169,9 @@ export const protect = CatchAsync(async (req: IGetUserAuthInfoRequest, res: Resp
     return next(new AppError(401, 'Usuario no encontrado'));
   }
 
-  // if (freshUser.changedPasswordAfter(decoded.iat)) {
-  //   return next(new AppError('La contraseña ha sido cambiada', 401));
-  // }
+  if (freshUser.changedPasswordAfter(decoded.iat)) {
+    return next(new AppError(401, 'La contraseña ha sido cambiada'));
+  }
 
   req.user = freshUser;
 

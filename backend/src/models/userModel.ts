@@ -1,6 +1,7 @@
 import { Schema, model, ObjectId } from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 export interface IUser {
   _id?: ObjectId;
@@ -9,15 +10,17 @@ export interface IUser {
   email: string;
   career: string;
   semester: number;
-  photo?: string;
+  photo: string;
   role: string;
   password: string;
   passwordConfirm: string | undefined;
   passwordChangedAt: Date;
-  passwordResetToken: String;
-  passwordResetExpires: Date;
+  passwordResetToken: String | undefined;
+  passwordResetExpires: Date | undefined;
   isModified: (path: string) => boolean;
   correctPassword: (inputPassword: string, userPassword: string) => Promise<boolean>;
+  createPasswordResetToken: () => string;
+  changedPasswordAfter: (JWTTimestamp: number) => boolean;
 }
 
 const userSchema = new Schema<IUser>({
@@ -60,6 +63,7 @@ const userSchema = new Schema<IUser>({
     type: String,
     required: [true, 'Confirmación de contraseña es requerida'],
     validate: {
+      // @ts-ignore
       validator: function (el: string) {
         // @ts-ignore
         return el === this.password;
@@ -81,6 +85,21 @@ userSchema.pre<IUser>('save', async function (next) {
 
 userSchema.methods.correctPassword = async function (inputPassword: string, userPassword: string) {
   return await bcrypt.compare(inputPassword, userPassword);
+};
+
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+  return resetToken;
+};
+
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp: number) {
+  if (this.passwordChangedAt) {
+    const changedTimestamp = parseInt((this.passwordChangedAt.getTime() / 1000) as any, 10);
+    return JWTTimestamp < changedTimestamp;
+  }
+  return false;
 };
 
 const User = model<IUser>('User', userSchema);
