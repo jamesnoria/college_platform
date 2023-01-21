@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "dev:cloud": "doppler run -- cross-env NODE_ENV=development nodemon",
-    "dev:local": "cross-env NODE_ENV=udh nodemon",
+    "dev": "doppler run -- cross-env NODE_ENV=development nodemon",
     "test": "jest"
   },
   "dependencies": {

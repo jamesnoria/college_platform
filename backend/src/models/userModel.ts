@@ -3,7 +3,7 @@ import validator from 'validator';
 import bcrypt from 'bcrypt';
 
 export interface IUser {
-  _id: ObjectId;
+  _id?: ObjectId;
   name: string;
   lastName: string;
   email: string;
@@ -17,6 +17,7 @@ export interface IUser {
   passwordResetToken: String;
   passwordResetExpires: Date;
   isModified: (path: string) => boolean;
+  correctPassword: (inputPassword: string, userPassword: string) => Promise<boolean>;
 }
 
 const userSchema = new Schema<IUser>({
@@ -77,6 +78,10 @@ userSchema.pre<IUser>('save', async function (next) {
   this.passwordConfirm = undefined;
   next();
 });
+
+userSchema.methods.correctPassword = async function (inputPassword: string, userPassword: string) {
+  return await bcrypt.compare(inputPassword, userPassword);
+};
 
 const User = model<IUser>('User', userSchema);
 
