@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  db:
+    image: mongo
+    ports:
+      - '27017:27017'
+
+  app:
+    build: .
+    environment:
+      - API_PORT
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - DB_LOCAL=mongodb://db:27017
+      - DOPPLER_CONFIG
+      - DOPPLER_ENVIRONMENT
+      - DOPPLER_PROJECT
+      - EMAIL_FROM
+      - FIREBASE_APIKEY
+      - FIREBASE_APPID
+      - FIREBASE_AUTHDOMAIN
+      - FIREBASE_MESSAGINGSENDERID
+      - FIREBASE_PROJECTID
+      - FIREBASE_STORAGEBUCKET
+      - JWT_EXPIRES_IN
+      - JWT_SECRET
+    depends_on:
+      - db
+    ports:
+      - '8080:8080'
+    volumes:
+      - .:/usr/src
+      - /usr/src/node_modules
+    command: npx nodemon --watch src --exec 'npm run dev:backend'

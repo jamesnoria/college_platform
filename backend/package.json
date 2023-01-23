@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "doppler run -- cross-env NODE_ENV=development nodemon",
+    "dev:docker": "cross-env NODE_ENV=development nodemon",
     "test": "jest"
   },
   "dependencies": {

@@ -21,6 +21,7 @@ export interface IUser {
   correctPassword: (inputPassword: string, userPassword: string) => Promise<boolean>;
   createPasswordResetToken: () => string;
   changedPasswordAfter: (JWTTimestamp: number) => boolean;
+  hashToken: (token: string) => string;
 }
 
 const userSchema = new Schema<IUser>({
@@ -100,6 +101,9 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp: number) {
     return JWTTimestamp < changedTimestamp;
   }
   return false;
+};
+export const hashToken = function (tokenPath: string) {
+  return crypto.createHash('sha256').update(tokenPath).digest('hex');
 };
 
 const User = model<IUser>('User', userSchema);

@@ -11,6 +11,6 @@ router.post('/login', authController.login);
 router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
 
-router.get('/', authController.protect, authController.restrictTo('student'), userController.getAllUsers);
+router.get('/', authController.protect, authController.restrictTo('admin'), userController.getAllUsers);
 
 export default router;

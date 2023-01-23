@@ -16,6 +16,7 @@ app.use('/api/v1/users', userRoute);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     status: 'success',
+    author: 'James Noria',
     message: 'Hello World 👋',
   });
 });

@@ -1,11 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
 import { promisify } from 'util';
-import User, { IUser } from '../models/userModel';
+import User, { IUser, hashToken } from '../models/userModel';
 import { AppError } from '../utils/appError';
 import CatchAsync from '../utils/catchAsync';
 import { ObjectId } from 'mongoose';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
 import AWS from 'aws-sdk';
 import { ref, uploadBytes } from 'firebase/storage';
 import { storage } from '../utils/firebase';
@@ -21,8 +20,9 @@ const signToken = (id: ObjectId | undefined) => {
 };
 
 export const signup = CatchAsync(async (req: Request, res: Response) => {
-  const { name, lastName, email, password, passwordConfirm } = req.body;
+  const { name, lastName, email, career, semester, password, passwordConfirm } = req.body;
 
+  // TODO: create a default photo for users
   const imgRef = ref(storage, `users/${req.file!.originalname}`);
   const snapshot = await uploadBytes(imgRef, req.file!.buffer);
 
@@ -30,6 +30,8 @@ export const signup = CatchAsync(async (req: Request, res: Response) => {
     name,
     lastName,
     email,
+    career,
+    semester,
     photo: snapshot.metadata.fullPath,
     password,
     passwordConfirm,
@@ -124,7 +126,7 @@ export const forgotPassword = CatchAsync(async (req: Request, res: Response, nex
 });
 
 export const resetPassword = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+  const hashedToken = hashToken(req.params.token);
 
   const user = await User.findOne({
     passwordResetToken: hashedToken,

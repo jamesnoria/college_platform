@@ -9,7 +9,8 @@
   "scripts": {
     "lint": "eslint .",
     "format": "prettier --write . && git add -A .",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "dev:backend": "cd backend && npm run dev:docker"
   },
   "repository": {
     "type": "git",

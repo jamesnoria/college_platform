@@ -13,7 +13,7 @@ export class AppError extends Error {
   }
 }
 
-// TODO: Correct this error handler
+// FIXME: Correct this error handler
 
 const errorHandler: ErrorRequestHandler = (error: any | AppError, req: Request, res: Response, next: NextFunction) => {
   const code = error.code || 500;
