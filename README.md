@@ -2,6 +2,23 @@
 
 Plataforma sin fines de lucro y con propositos de ayuda al estudiante en curso o graduado de la facultad de sistemas de la Universidad de Huánuco (UDH)
 
+# Tabla de Contenidos
+
+- [Plataforma UDH - Sistemas](#plataforma-udh---sistemas)
+- [Tabla de Contenidos](#tabla-de-contenidos)
+  - [Consideraciones](#consideraciones)
+  - [Pre-requisitos](#pre-requisitos)
+  - [Instalación](#instalación)
+  - [Modo Desarrollo con Docker](#modo-desarrollo-con-docker)
+  - [License](#license)
+
+# Consideraciones
+
+- El proyecto se encuentra en desarrollo bajo sistemas operativos UNIX, por tanto, no fue probado bajo un SO Windows per-se. Sin embargo, se puede ejecutar en Windows, pero es necesario tener instalado WSL2 y Docker Desktop para Windows.
+- Es necesario tambien solicitar al equipo de desarrollo las credenciales de doppler para el proyecto.
+
+<!-- FIXME: Probar en un entorno windows a ver como funciona -->
+
 # Pre-requisitos
 
 - NodeJS v18.x
@@ -11,24 +28,23 @@ Plataforma sin fines de lucro y con propositos de ayuda al estudiante en curso o
 
 ## Instalación
 
-Una vez dentro del repositorio (root), ejecutar el package manager npm para instalar las dependencias.
+- Una vez dentro del repositorio (root), ejecutar el package manager npm para instalar las dependencias.
+  ```bash
+  npm install
+  ```
+- Para iniciar el proyecto, ejecutar el siguiente comando:
+  ```bash
+  doppler run -- npm run start
+  ```
+- Usar el puerto 8080
 
-```bash
-npm install
-```
+## Modo Desarrollo con Docker
 
-## Uso con Docker
-
-```bash
-docker-compose up -d
-```
-
-## Contributing
-
-Pull requests are welcome. For major changes, please open an issue first
-to discuss what you would like to change.
-
-Please make sure to update tests as appropriate.
+- Para iniciar el modo de desarrollo es necesario contar con Docker y Docker Compose instalados en el equipo y solicitar las credenciales de doppler para el proyecto. Luego, entonces:
+  ```bash
+  doppler run -- docker-compose up -d
+  ```
+- Usar el puerto 8080
 
 ## License
 
