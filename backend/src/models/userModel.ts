@@ -14,6 +14,7 @@ export interface IUser {
   role: string;
   password: string;
   passwordConfirm: string | undefined;
+  active: boolean;
   passwordChangedAt: Date;
   passwordResetToken: String | undefined;
   passwordResetExpires: Date | undefined;
@@ -21,6 +22,7 @@ export interface IUser {
   correctPassword: (inputPassword: string, userPassword: string) => Promise<boolean>;
   createPasswordResetToken: () => string;
   changedPasswordAfter: (JWTTimestamp: number) => boolean;
+  find: (filter: any) => Promise<IUser[]>; //ask david
   hashToken: (token: string) => string;
 }
 
@@ -63,6 +65,7 @@ const userSchema = new Schema<IUser>({
   passwordConfirm: {
     type: String,
     required: [true, 'Confirmación de contraseña es requerida'],
+    // ask david
     validate: {
       // @ts-ignore
       validator: function (el: string) {
@@ -71,6 +74,11 @@ const userSchema = new Schema<IUser>({
       },
       message: 'Las contraseñas no coinciden',
     },
+  },
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
   },
   passwordChangedAt: Date,
   passwordResetToken: String,
@@ -102,6 +110,12 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp: number) {
   }
   return false;
 };
+
+userSchema.pre<IUser>(/find^/, function (next) {
+  this.find({ active: { $ne: false } });
+  next();
+});
+
 export const hashToken = function (tokenPath: string) {
   return crypto.createHash('sha256').update(tokenPath).digest('hex');
 };

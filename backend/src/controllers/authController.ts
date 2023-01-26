@@ -5,9 +5,9 @@ import { AppError } from '../utils/appError';
 import CatchAsync from '../utils/catchAsync';
 import { ObjectId } from 'mongoose';
 import jwt from 'jsonwebtoken';
-import AWS from 'aws-sdk';
 import { ref, uploadBytes } from 'firebase/storage';
 import { storage } from '../utils/firebase';
+import Email from '../utils/email';
 
 interface IGetUserAuthInfoRequest extends Request {
   user: IUser;
@@ -38,6 +38,8 @@ export const signup = CatchAsync(async (req: Request, res: Response) => {
   });
 
   const token = signToken(newUser._id);
+
+  await new Email(newUser, 'Bienvenido a la plataforma de Aprendizaje UDH', 'Correo de Bienvenida').send();
 
   res.status(201).json({
     status: 'success',
@@ -83,38 +85,12 @@ export const forgotPassword = CatchAsync(async (req: Request, res: Response, nex
   const message = `Por favor haga click en este enlace para restablecer su contraseña: \n\n ${resetURL}`;
 
   try {
-    AWS.config.update({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      region: 'us-east-1',
-    });
+    const email = new Email(user, message, 'Restablecer contraseña');
+    await email.send();
 
-    const params = {
-      Destination: {
-        ToAddresses: [user.email],
-      },
-      Message: {
-        Body: {
-          Html: {
-            Charset: 'UTF-8',
-            Data: message,
-          },
-        },
-        Subject: {
-          Charset: 'UTF-8',
-          Data: 'Su token de restablecimiento de contraseña (válido por 10 minutos)',
-        },
-      },
-      Source: process.env.EMAIL_FROM as string,
-    };
-
-    const sendPromise = new AWS.SES({ apiVersion: '2010-12-01' }).sendEmail(params).promise();
-    sendPromise.then(function (data) {
-      res.status(200).json({
-        status: 'success',
-        aws: data,
-        message: 'Email de restablecimiento de contraseña enviado',
-      });
+    res.status(200).json({
+      status: 'success',
+      message: 'Email enviado',
     });
   } catch (err) {
     user.passwordResetToken = undefined;
