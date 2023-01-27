@@ -5,20 +5,21 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../utils/firebase';
 import { AppError } from '../utils/appError';
 
-//ask david
 interface IGetUserAuthInfoRequest extends Request {
   user: {
     id: string;
   };
 }
 
-//ask david
-const filterObj = (obj: any, ...allowedFields: string[]) => {
-  const newObj: any = {};
+type GenericObj = {
+  [key: string]: unknown;
+};
+
+const filterObj = <T extends GenericObj>(obj: T, ...allowedFields: string[]) => {
   Object.keys(obj).forEach((el) => {
-    if (allowedFields.includes(el)) newObj[el] = obj[el];
+    if (!allowedFields.includes(el)) delete obj[el];
   });
-  return newObj;
+  return obj;
 };
 
 export const getAllUsers = CatchAsync(async (req: Request, res: Response) => {

@@ -22,9 +22,13 @@ const signToken = (id: ObjectId | undefined) => {
 export const signup = CatchAsync(async (req: Request, res: Response) => {
   const { name, lastName, email, career, semester, password, passwordConfirm } = req.body;
 
-  // TODO: create a default photo for users
-  const imgRef = ref(storage, `users/${req.file!.originalname}`);
-  const snapshot = await uploadBytes(imgRef, req.file!.buffer);
+  let imagSrc = 'users/default.jpeg';
+
+  if (req.file) {
+    const imgRef = ref(storage, `users/${req.file!.originalname}`);
+    const snapshot = await uploadBytes(imgRef, req.file!.buffer);
+    imagSrc = snapshot.metadata.fullPath;
+  }
 
   const newUser = await User.create({
     name,
@@ -32,7 +36,7 @@ export const signup = CatchAsync(async (req: Request, res: Response) => {
     email,
     career,
     semester,
-    photo: snapshot.metadata.fullPath,
+    photo: imagSrc,
     password,
     passwordConfirm,
   });

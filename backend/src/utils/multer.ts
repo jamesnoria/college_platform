@@ -1,12 +1,13 @@
-import multer from 'multer';
+import multer, { FileFilterCallback } from 'multer';
+import { Request } from 'express';
 
 const storage = multer.memoryStorage();
 
-interface IFile extends Express.Multer.File {
-  buffer: Buffer;
+interface IFileFilterCallback extends FileFilterCallback {
+  (error: Error | null, acceptFile: boolean): void;
 }
 
-const multerFileFilter = (req: Express.Request, file: IFile, cb: any) => {
+const multerFileFilter = (req: Request, file: Express.Multer.File, cb: IFileFilterCallback) => {
   if (!file.mimetype.startsWith('image')) {
     cb(new Error('Not an image! Please upload an image.'), false);
   } else {

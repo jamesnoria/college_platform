@@ -1,8 +1,11 @@
-import { Schema, model, ObjectId } from 'mongoose';
+import { Schema, model, ObjectId, ValidateFn } from 'mongoose';
 import validator from 'validator';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
+const test: ValidateFn<string> = (val) => {
+  return val.length > 0;
+};
 export interface IUser {
   _id?: ObjectId;
   name: string;
@@ -22,7 +25,7 @@ export interface IUser {
   correctPassword: (inputPassword: string, userPassword: string) => Promise<boolean>;
   createPasswordResetToken: () => string;
   changedPasswordAfter: (JWTTimestamp: number) => boolean;
-  find: (filter: any) => Promise<IUser[]>; //ask david
+  find: (filter: any) => Promise<IUser[]>;
   hashToken: (token: string) => string;
 }
 
@@ -65,13 +68,11 @@ const userSchema = new Schema<IUser>({
   passwordConfirm: {
     type: String,
     required: [true, 'Confirmación de contraseña es requerida'],
-    // ask david
     validate: {
-      // @ts-ignore
       validator: function (el: string) {
         // @ts-ignore
         return el === this.password;
-      },
+      } as ValidateFn<string>,
       message: 'Las contraseñas no coinciden',
     },
   },

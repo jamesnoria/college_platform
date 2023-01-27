@@ -10,10 +10,15 @@ router.post('/login', authController.login);
 
 router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
-router.patch('/updateMe', authController.protect, upload.single('photo'), userController.updateMe);
-router.delete('/deleteMe', authController.protect, userController.deleteMe);
-router.get('/me', authController.protect, userController.getMe);
 
-router.get('/', authController.protect, authController.restrictTo('admin'), userController.getAllUsers);
+// Protect all routes after this middleware
+router.use(authController.protect);
+router.patch('/updateMe', upload.single('photo'), userController.updateMe);
+router.delete('/deleteMe', userController.deleteMe);
+router.get('/me', userController.getMe);
+
+// Restrict all routes after this middleware to admin only
+router.use(authController.restrictTo('admin'));
+router.get('/', userController.getAllUsers);
 
 export default router;
