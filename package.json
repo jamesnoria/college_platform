@@ -1,7 +1,7 @@
 {
   "name": "college_platform",
   "version": "1.0.0",
-  "description": "Plataforma sin fines de lucro y con propositos de ayuda al estudiante en curso o graduado de la facultad de sistemas de la Universidad de Huánuco (UDH)",
+  "description": "Plataforma educativa",
   "workspaces": [
     "frontend",
     "backend"

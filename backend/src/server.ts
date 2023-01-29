@@ -7,7 +7,7 @@ import app from './app';
 
 const ENVIRONMENT = process.env.NODE_ENV;
 const PORT = process.env.API_PORT || 3000;
-const DB = ENVIRONMENT === 'development' ? process.env.DB_LOCAL! : process.env.DB_REMOTE!;
+const DB = ENVIRONMENT === 'development' ? process.env.DB_REMOTE! : process.env.DB_LOCAL!;
 
 const DbRunner = async () => {
   try {
