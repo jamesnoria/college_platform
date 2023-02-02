@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
@@ -36,8 +36,8 @@ app.get('/', (req: Request, res: Response) => {
   });
 });
 
-app.all('*', (req, res, next) => {
-  throw new AppError(404, `${req.originalUrl} no es un endpoint válido`);
+app.all('*', (req: Request, res: Response, next: NextFunction) => {
+  next(new AppError(404, `No se puede encontrar ${req.originalUrl} en este servidor!`));
 });
 
 app.use(errorHandler);

@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "format": "prettier --write . && git add -A .",
     "prepare": "husky install",
+    "start": "cd backend && npm run dev",
     "dev:backend": "cd backend && npm run dev:docker"
   },
   "repository": {

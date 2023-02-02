@@ -4,14 +4,13 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "dev": "doppler run -- cross-env NODE_ENV=development nodemon",
-    "dev:docker": "cross-env NODE_ENV=development nodemon",
+    "dev": "NODE_ENV=development nodemon",
+    "dev:docker": "NODE_ENV=docker nodemon",
     "test": "jest"
   },
   "dependencies": {
     "aws-sdk": "^2.1299.0",
     "bcrypt": "^5.1.0",
-    "cross-env": "^7.0.3",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-mongo-sanitize": "^2.2.0",

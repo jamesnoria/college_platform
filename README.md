@@ -1,10 +1,10 @@
-# Plataforma UDH - Sistemas
+# Plataforma Educativa
 
-Plataforma sin fines de lucro y con propositos de ayuda al estudiante en curso o graduado de la facultad de sistemas de la Universidad de Huánuco (UDH)
+Este proyecto es una plataforma educativa que permite a los estudiantes de la Universidad X, inscribirse a cursos y ver sus notas. Además, permite a los profesores crear cursos y ver las notas de sus estudiantes.
 
 # Tabla de Contenidos
 
-- [Plataforma UDH - Sistemas](#plataforma-udh---sistemas)
+- [Plataforma Educativa](#plataforma-educativa)
 - [Tabla de Contenidos](#tabla-de-contenidos)
   - [Consideraciones](#consideraciones)
   - [Pre-requisitos](#pre-requisitos)
@@ -17,11 +17,9 @@ Plataforma sin fines de lucro y con propositos de ayuda al estudiante en curso o
 - El proyecto se encuentra en desarrollo bajo sistemas operativos UNIX, por tanto, no fue probado bajo un SO Windows per-se. Sin embargo, se puede ejecutar en Windows, pero es necesario tener instalado WSL2 y Docker Desktop para Windows.
 - Es necesario tambien solicitar al equipo de desarrollo las credenciales de doppler para el proyecto.
 
-<!-- FIXME: Probar en un entorno windows a ver como funciona -->
-
 # Pre-requisitos
 
-- NodeJS v18.x
+- NodeJS v16.x
 - Python 3.x.x (Algunas dependencias requieren de python)
 - Usamos `npm workspaces` con la intención de disminuir los tiempos y esfuerzos en instalar y levantar la aplicación por completo.
 - Doppler (Opcional y solo para desarrollo)
@@ -34,7 +32,7 @@ Plataforma sin fines de lucro y con propositos de ayuda al estudiante en curso o
   ```
 - Para iniciar el proyecto, ejecutar el siguiente comando:
   ```bash
-  doppler run -- npm run start
+  doppler run -- npm run dev
   ```
 - Usar el puerto 8080
 

@@ -43,7 +43,7 @@ export const signup = CatchAsync(async (req: Request, res: Response) => {
 
   const token = signToken(newUser._id);
 
-  await new Email(newUser, 'Bienvenido a la plataforma de Aprendizaje UDH', 'Correo de Bienvenida').send();
+  await new Email(newUser, 'Bienvenido a esta plataforma de aprendizaje', 'Correo de Bienvenida').send();
 
   res.status(201).json({
     status: 'success',
