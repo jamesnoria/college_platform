@@ -48,6 +48,10 @@ Este proyecto es una plataforma educativa que permite a los estudiantes de la Un
 
 - Hola esto es una prueba de el cambio en mi rama.
 
+## Adicional
+
+- Hola esto es un campo adicional
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
