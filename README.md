@@ -15,7 +15,7 @@ Este proyecto intenta ser una plataforma educativa que permite a los estudiantes
 # Consideraciones
 
 - El proyecto se encuentra en desarrollo bajo sistemas operativos UNIX, por tanto, no fue probado bajo un SO Windows per-se. Sin embargo, se puede ejecutar en Windows, pero es necesario tener instalado WSL2 y Docker Desktop para Windows.
-- Es necesario tambien solicitar al equipo de desarrollo las credenciales de doppler para el proyecto.
+- Es necesario tambien solicitar al equipo de desarrollo las credenciales de doppler para el proyecto
 
 # Pre-requisitos
 
