@@ -1,4 +1,4 @@
-# Plataforma Educativa v2.0
+# Plataforma Educativa v3.0
 
 Este proyecto intenta ser una plataforma educativa que permite a los estudiantes de la Universidad X, inscribirse a cursos y ver sus notas. Además, permite a los profesores crear cursos y ver las notas de sus estudiantes.
 
