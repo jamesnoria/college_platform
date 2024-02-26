@@ -1,13 +1,13 @@
 FROM node:18
 
-COPY ["package.json", "package-lock.json", "/usr/src/"]
-COPY ["./backend/package.json", "/usr/src/backend/"]
+WORKDIR /app
 
-WORKDIR /usr/src
+COPY ["package.json", "package-lock.json", "./"]
+COPY ["./backend/package.json", "./backend/"]
 
-RUN npm install
+RUN npm ci
 
-COPY [".", "/usr/src/"]
+COPY [".", "./"]
 
 EXPOSE 8080
 
