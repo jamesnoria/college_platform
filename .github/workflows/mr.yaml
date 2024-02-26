@@ -1,0 +1,22 @@
+name: PR Checker
+run-name: ${{ github.actor }} Created a PR
+on: [pull_request]
+jobs:
+  MR-Precheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - run: echo "💡 The ${{ github.repository }} repo cloned successfully"
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install deps
+        run: npm ci
+      - name: Run format checker
+        run: npm run format:check
+      - name: Run linter
+        run: npm run lint
+      - name: Run tests
+        run: npm run test
