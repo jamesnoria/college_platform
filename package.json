@@ -8,10 +8,12 @@
   ],
   "scripts": {
     "lint": "eslint .",
-    "format": "prettier --write . && git add -A .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "prepare": "husky install",
-    "start": "cd backend && npm run dev",
-    "dev:backend": "cd backend && npm run dev:docker"
+    "start": "npm -w backend run dev",
+    "dev:backend": "npm -w backend run dev:docker",
+    "test": "jest"
   },
   "repository": {
     "type": "git",
