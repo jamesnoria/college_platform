@@ -1,7 +1,5 @@
 # Plataforma Educativa v3.0
 
-Prueba
-
 Este proyecto intenta ser una plataforma educativa que permite a los estudiantes de la Universidad X, inscribirse a cursos y ver sus notas. Además, permite a los profesores crear cursos y ver las notas de sus estudiantes.
 
 # Tabla de Contenidos
@@ -49,10 +47,6 @@ Este proyecto intenta ser una plataforma educativa que permite a los estudiantes
 ## Comentarios
 
 - Hola esto es una prueba de el cambio en mi rama.
-
-## Adicional
-
-- Hola esto es un campo adicional
 
 ## License
 
