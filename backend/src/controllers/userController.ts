@@ -1,96 +1,110 @@
 import { NextFunction, Request, Response } from 'express';
-import User from '../models/userModel';
-import CatchAsync from '../utils/catchAsync';
+import User, { IUser } from '../models/userModel';
+import CatchAsync, { ControllerFunction } from '../utils/catchAsync';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../utils/firebase';
 import { AppError } from '../utils/appError';
 
-interface IGetUserAuthInfoRequest extends Request {
-  user: {
-    id: string;
-  };
-}
-
-type GenericObj = {
-  [key: string]: unknown;
-};
-
-const filterObj = <T extends GenericObj>(obj: T, ...allowedFields: string[]) => {
-  Object.keys(obj).forEach((el) => {
-    if (!allowedFields.includes(el)) delete obj[el];
-  });
-  return obj;
-};
-
-export const getAllUsers = CatchAsync(async (req: Request, res: Response) => {
+export const getAllUsers: ControllerFunction<
+  undefined,
+  { status: string; results: number; data: { users: IUser[] } }
+> = async (input) => {
   const users = await User.find();
 
-  const usersWithImg = await Promise.all(
-    users.map(async (user) => {
-      const imgRef = ref(storage, user.photo);
-      const imgURL = await getDownloadURL(imgRef);
-      return { ...user.toJSON(), photo: imgURL };
-    })
-  );
+  // This might take more time but otherwise you can get blocked by the number of requests you can make to the server at the same time
+  const usersWithImg: IUser[] = [];
+  for (const user of users) {
+    const userObject = user.toObject() as IUser;
+    const imgRef = ref(storage, user.photo);
+    const imgURL = await getDownloadURL(imgRef);
+    usersWithImg.push({
+      ...userObject,
+      photo: imgURL,
+    });
+  }
 
-  res.status(200).json({
-    status: 'success',
-    results: users.length,
+  return {
+    status: 200,
     data: {
-      users: usersWithImg,
+      status: 'success',
+      results: users.length,
+      data: {
+        users: usersWithImg,
+      },
     },
-  });
-});
+  };
+};
 
-export const getMe = CatchAsync(async (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
-  const user = await User.findById(req.user.id);
+export const getMe: ControllerFunction<undefined, { status: string; user: IUser }> = async (input) => {
+  const user = await User.findById(input.user?._id);
 
   if (!user) {
-    return next(new AppError(404, 'No user found with that ID'));
+    throw new AppError(404, 'No user found with that ID');
   }
 
   const imgRef = ref(storage, user.photo);
   const imgURL = await getDownloadURL(imgRef);
 
-  res.status(200).json({
-    status: 'success',
+  const userObject = user.toObject() as IUser;
+
+  return {
+    status: 200,
     data: {
-      user: { ...user.toJSON(), photo: imgURL },
+      status: 'success',
+      user: { ...userObject, photo: imgURL },
     },
-  });
-});
+  };
+};
 
-export const updateMe = CatchAsync(async (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
-  if (req.body.password || req.body.passwordConfirm) {
-    next(new AppError(400, 'This route is not for password updates. Please use /updateMyPassword.'));
+type UpdateMeRequestBody = {
+  name: string;
+  lastName: string;
+  email: string;
+  career: string;
+  semester: number;
+  password: string;
+};
+
+export const updateMe: ControllerFunction<UpdateMeRequestBody, { status: string; user: IUser }> = async (input) => {
+  if (input.body.password) {
+    throw new AppError(400, 'This route is not for password updates. Please use /updateMyPassword.');
   }
 
-  const filteredBody = filterObj(req.body, 'name', 'lastName', 'email', 'career', 'semester');
+  let filteredBody: Record<string, unknown> = {
+    name: input.body.name,
+    lastName: input.body.lastName,
+    email: input.body.email,
+    career: input.body.career,
+    semester: input.body.semester,
+  };
 
-  if (req.file) {
-    const imgRef = ref(storage, `users/${req.file.originalname}`);
-    const snapshot = await uploadBytes(imgRef, req.file.buffer);
-    filteredBody.photo = snapshot.metadata.fullPath;
+  if (input.file) {
+    const imgRef = ref(storage, `users/${input.file.originalname}`);
+    const snapshot = await uploadBytes(imgRef, input.file.buffer);
+    const photoFullPath = snapshot.metadata.fullPath;
+    filteredBody = { ...filteredBody, photo: photoFullPath };
   }
 
-  const updateUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+  const updateUser = await User.findByIdAndUpdate(input.user?._id, filteredBody, {
     new: true,
     runValidators: true,
   });
 
-  res.status(200).json({
-    status: 'success',
+  return {
+    status: 200,
     data: {
-      user: updateUser,
+      status: 'success',
+      user: updateUser?.toObject() as IUser,
     },
-  });
-});
+  };
+};
 
-export const deleteMe = CatchAsync(async (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
-  await User.findByIdAndUpdate(req.user.id, { active: false });
-
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
+export const deleteMe: ControllerFunction<undefined, { status: string }> = async (input) => {
+  await User.findByIdAndUpdate(input.user?._id, { active: false });
+  return {
+    status: 204,
+    data: {
+      status: 'success',
+    },
+  };
+};

@@ -16,7 +16,6 @@ export interface IUser {
   photo: string;
   role: string;
   password: string;
-  passwordConfirm: string | undefined;
   active: boolean;
   passwordChangedAt: Date;
   passwordResetToken: String | undefined;
@@ -65,17 +64,6 @@ const userSchema = new Schema<IUser>({
     minlength: 8,
     select: false,
   },
-  passwordConfirm: {
-    type: String,
-    required: [true, 'Confirmación de contraseña es requerida'],
-    validate: {
-      validator: function (el: string) {
-        // @ts-ignore
-        return el === this.password;
-      } as ValidateFn<string>,
-      message: 'Las contraseñas no coinciden',
-    },
-  },
   active: {
     type: Boolean,
     default: true,
@@ -89,7 +77,6 @@ const userSchema = new Schema<IUser>({
 userSchema.pre<IUser>('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
-  this.passwordConfirm = undefined;
   next();
 });
 
