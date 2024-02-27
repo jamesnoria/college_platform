@@ -3,21 +3,16 @@ import { promisify } from 'util';
 import User, { IUser, hashToken } from '../models/userModel';
 import { AppError } from '../utils/appError';
 import CatchAsync, { ControllerFunction } from '../utils/catchAsync';
-import { ObjectId } from 'mongoose';
 import jwt from 'jsonwebtoken';
 import { ref, uploadBytes } from 'firebase/storage';
 import { storage } from '../utils/firebase';
 import Email from '../utils/email';
+import { generateJwtToken } from '../utils/jwt';
+import { comparePasswordHash } from '../utils/crypto';
 
 interface IGetUserAuthInfoRequest extends Request {
   user: IUser;
 }
-
-const signToken = (id: ObjectId | undefined) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET!, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
-  });
-};
 
 type SignupRequestBody = {
   name: string;
@@ -55,7 +50,9 @@ export const signup: ControllerFunction<SignupRequestBody, SignupResponseBody> =
     password,
   });
 
-  const token = signToken(newUser._id);
+  const userObject = newUser.toObject() as IUser;
+
+  const token = generateJwtToken(userObject._id!);
 
   await new Email(newUser, 'Bienvenido a esta plataforma de aprendizaje', 'Correo de Bienvenida').send();
 
@@ -78,14 +75,15 @@ export const login: ControllerFunction<{ email: string; password: string }, { st
     throw new AppError(400, 'Por favor ingrese un usuario y contraseña');
   }
 
-  const user = (await User.findOne({ email }).select('+password')) as IUser;
-  const correct = await user.correctPassword(password, user!.password);
+  const user = (await User.findOne({ email }).select('+password')) as IUser | undefined;
 
-  if (!user || !correct) {
-    throw new AppError(401, 'Email o contraseña incorrectos');
-  }
+  if (!user) throw new AppError(401, 'Email o contraseña incorrectos');
 
-  const token = signToken(user._id);
+  const correct = await comparePasswordHash(password, user.password!);
+
+  if (!correct) throw new AppError(401, 'Email o contraseña incorrectos');
+
+  const token = generateJwtToken(user._id!);
 
   return {
     status: 200,
@@ -141,7 +139,7 @@ export const resetPassword: ControllerFunction<{ password: string }, { status: s
 
   await user.save();
 
-  const token = signToken(user._id);
+  const token = generateJwtToken(user?._id);
 
   return {
     status: 200,

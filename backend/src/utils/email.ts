@@ -1,12 +1,8 @@
-import AWS from 'aws-sdk';
 import { IUser } from '../models/userModel';
+import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 
 // TODO: Integrar con PUG
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: 'us-east-1',
-});
+const client = new SESClient({ region: 'us-east-1' });
 
 class Email {
   to: string;
@@ -45,8 +41,7 @@ class Email {
   }
 
   async send() {
-    const sendPromise = new AWS.SES({ apiVersion: '2010-12-01' }).sendEmail(this.params()).promise();
-    return sendPromise;
+    return client.send(new SendEmailCommand(this.params()));
   }
 }
 

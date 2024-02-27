@@ -27,3 +27,6 @@ jest.config.js
 
 # envs
 .env
+
+error.log
+debug.log

@@ -5,3 +5,5 @@ echo "=== ESLINT === "
 npm run lint
 echo "=== PRETTIER === "
 npm run format:check
+echo "=== TEST === "
+npm run test

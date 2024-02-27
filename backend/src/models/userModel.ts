@@ -1,13 +1,13 @@
 import { Schema, model, ObjectId, ValidateFn } from 'mongoose';
 import validator from 'validator';
-import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import { hashPassword } from '../utils/crypto';
 
 const test: ValidateFn<string> = (val) => {
   return val.length > 0;
 };
 export interface IUser {
-  _id?: ObjectId;
+  _id?: string;
   name: string;
   lastName: string;
   email: string;
@@ -21,7 +21,6 @@ export interface IUser {
   passwordResetToken: String | undefined;
   passwordResetExpires: Date | undefined;
   isModified: (path: string) => boolean;
-  correctPassword: (inputPassword: string, userPassword: string) => Promise<boolean>;
   createPasswordResetToken: () => string;
   changedPasswordAfter: (JWTTimestamp: number) => boolean;
   find: (filter: any) => Promise<IUser[]>;
@@ -76,13 +75,9 @@ const userSchema = new Schema<IUser>({
 
 userSchema.pre<IUser>('save', async function (next) {
   if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 12);
+  this.password = await hashPassword(this.password);
   next();
 });
-
-userSchema.methods.correctPassword = async function (inputPassword: string, userPassword: string) {
-  return await bcrypt.compare(inputPassword, userPassword);
-};
 
 userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');
