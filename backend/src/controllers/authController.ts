@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { promisify } from 'util';
 import User, { IUser, hashToken } from '../models/userModel';
 import { AppError } from '../utils/appError';
-import CatchAsync from '../utils/catchAsync';
+import CatchAsync, { ControllerFunction } from '../utils/catchAsync';
 import { ObjectId } from 'mongoose';
 import jwt from 'jsonwebtoken';
 import { ref, uploadBytes } from 'firebase/storage';
@@ -19,14 +19,29 @@ const signToken = (id: ObjectId | undefined) => {
   });
 };
 
-export const signup = CatchAsync(async (req: Request, res: Response) => {
-  const { name, lastName, email, career, semester, password, passwordConfirm } = req.body;
+type SignupRequestBody = {
+  name: string;
+  lastName: string;
+  email: string;
+  career: string;
+  semester: number;
+  password: string;
+};
+
+type SignupResponseBody = {
+  status: string;
+  token: string;
+  user: IUser;
+};
+
+export const signup: ControllerFunction<SignupRequestBody, SignupResponseBody> = async (input) => {
+  const { name, lastName, email, career, semester, password } = input.body;
 
   let imagSrc = 'users/default.jpeg';
 
-  if (req.file) {
-    const imgRef = ref(storage, `users/${req.file!.originalname}`);
-    const snapshot = await uploadBytes(imgRef, req.file!.buffer);
+  if (input.file) {
+    const imgRef = ref(storage, `users/${input.file.originalname}`);
+    const snapshot = await uploadBytes(imgRef, input.file.buffer);
     imagSrc = snapshot.metadata.fullPath;
   }
 
@@ -38,53 +53,55 @@ export const signup = CatchAsync(async (req: Request, res: Response) => {
     semester,
     photo: imagSrc,
     password,
-    passwordConfirm,
   });
 
   const token = signToken(newUser._id);
 
   await new Email(newUser, 'Bienvenido a esta plataforma de aprendizaje', 'Correo de Bienvenida').send();
 
-  res.status(201).json({
-    status: 'success',
-    token,
+  return {
+    status: 201,
     data: {
+      status: 'success',
+      token,
       user: newUser,
     },
-  });
-});
+  };
+};
 
-export const login = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const { email, password } = req.body;
+export const login: ControllerFunction<{ email: string; password: string }, { status: string; token: string }> = async (
+  input
+) => {
+  const { email, password } = input.body;
 
   if (!email || !password) {
-    return next(new AppError(400, 'Por favor ingrese un usuario y contraseña'));
+    throw new AppError(400, 'Por favor ingrese un usuario y contraseña');
   }
 
   const user = (await User.findOne({ email }).select('+password')) as IUser;
   const correct = await user.correctPassword(password, user!.password);
 
   if (!user || !correct) {
-    return next(new AppError(401, 'Email o contraseña incorrectos'));
+    throw new AppError(401, 'Email o contraseña incorrectos');
   }
 
   const token = signToken(user._id);
 
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
-});
+  return {
+    status: 200,
+    data: { status: 'success', token },
+  };
+};
 
-export const forgotPassword = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const user = await User.findOne({ email: req.body.email });
+export const forgotPassword: ControllerFunction<{ email: string }> = async (input) => {
+  const user = await User.findOne({ email: input.body.email });
   if (!user) {
-    return next(new AppError(404, 'No se encontró ningun usuario con ese email'));
+    throw new AppError(404, 'No se encontró ningun usuario con ese email');
   }
   const resetToken = user.createPasswordResetToken();
   await user.save({ validateBeforeSave: false });
 
-  const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
+  const resetURL = `${input.baseUrl}/api/v1/users/resetPassword/${resetToken}`;
 
   const message = `Por favor haga click en este enlace para restablecer su contraseña: \n\n ${resetURL}`;
 
@@ -92,21 +109,22 @@ export const forgotPassword = CatchAsync(async (req: Request, res: Response, nex
     const email = new Email(user, message, 'Restablecer contraseña');
     await email.send();
 
-    res.status(200).json({
-      status: 'success',
-      message: 'Email enviado',
-    });
+    return {
+      status: 200,
+      data: { status: 'success', message: 'Email enviado' },
+    };
   } catch (err) {
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save({ validateBeforeSave: false });
-
-    return next(new AppError(500, 'Error al enviar el email de restablecimiento de contraseña'));
+    throw new AppError(500, 'Error al enviar el email de restablecimiento de contraseña');
   }
-});
+};
 
-export const resetPassword = CatchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  const hashedToken = hashToken(req.params.token);
+export const resetPassword: ControllerFunction<{ password: string }, { status: string; token: string }> = async (
+  input
+) => {
+  const hashedToken = hashToken(input.params.token);
 
   const user = await User.findOne({
     passwordResetToken: hashedToken,
@@ -114,11 +132,10 @@ export const resetPassword = CatchAsync(async (req: Request, res: Response, next
   });
 
   if (!user) {
-    return next(new AppError(400, 'Token invalido o expirado'));
+    throw new AppError(400, 'Token invalido o expirado');
   }
 
-  user.password = req.body.password;
-  user.passwordConfirm = req.body.passwordConfirm;
+  user.password = input.body.password;
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
 
@@ -126,11 +143,14 @@ export const resetPassword = CatchAsync(async (req: Request, res: Response, next
 
   const token = signToken(user._id);
 
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
-});
+  return {
+    status: 200,
+    data: {
+      status: 'success',
+      token,
+    },
+  };
+};
 
 export const protect = CatchAsync(async (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
   let token: string | undefined;
@@ -140,7 +160,7 @@ export const protect = CatchAsync(async (req: IGetUserAuthInfoRequest, res: Resp
   }
 
   if (!token) {
-    return next(new AppError(401, 'Ningun token ha sido enviado'));
+    throw new AppError(401, 'Ningun token ha sido enviado');
   }
 
   // @ts-ignore
@@ -148,14 +168,14 @@ export const protect = CatchAsync(async (req: IGetUserAuthInfoRequest, res: Resp
   const freshUser = await User.findById(decoded.id);
 
   if (!freshUser) {
-    return next(new AppError(401, 'Usuario no encontrado'));
+    throw new AppError(401, 'Usuario no encontrado');
   }
 
   if (freshUser.changedPasswordAfter(decoded.iat)) {
-    return next(new AppError(401, 'La contraseña ha sido cambiada'));
+    throw new AppError(401, 'La contraseña ha sido cambiada');
   }
 
-  req.user = freshUser;
+  req.user = freshUser.toObject() as IUser;
 
   next();
 });
@@ -163,7 +183,7 @@ export const protect = CatchAsync(async (req: IGetUserAuthInfoRequest, res: Resp
 export const restrictTo = (...roles: string[]) => {
   return (req: IGetUserAuthInfoRequest, res: Response | any, next: NextFunction | any) => {
     if (!roles.includes(req.user.role)) {
-      return next(new AppError(403, 'No tienes permisos para realizar esta acción'));
+      throw new AppError(403, 'No tienes permisos para realizar esta acción');
     }
     next();
   };
