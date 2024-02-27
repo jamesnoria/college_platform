@@ -13,7 +13,8 @@
     "prepare": "husky install",
     "start": "npm -w backend run dev",
     "dev:backend": "npm -w backend run dev:docker",
-    "test": "jest"
+    "test": "jest --onlyChanged",
+    "test:all": "jest"
   },
   "repository": {
     "type": "git",
@@ -32,6 +33,10 @@
     "@typescript-eslint/parser": "^5.48.1",
     "eslint": "^8.31.0",
     "husky": "^8.0.3",
+    "mongodb-memory-server": "^9.1.6",
     "prettier": "^2.8.2"
+  },
+  "dependencies": {
+    "@ptkdev/logger": "^1.8.0"
   }
 }
